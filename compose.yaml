@@ -17,3 +17,8 @@ services:
     volumes:
       - ./data:/var/lib/clickhouse
       - ./logs:/var/log/clickhouse-server
+    networks:
+      - clickhouse-network
+
+networks:
+  clickhouse-network:
