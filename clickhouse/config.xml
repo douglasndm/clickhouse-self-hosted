@@ -1,3 +1,17 @@
 <clickhouse>
     <listen_host>0.0.0.0</listen_host>
+
+    <!-- Native BACKUP/RESTORE destination. Keep this volume separate from data. -->
+    <storage_configuration>
+        <disks>
+            <backups>
+                <type>local</type>
+                <path>/backups/</path>
+            </backups>
+        </disks>
+    </storage_configuration>
+
+    <backups>
+        <allowed_disk>backups</allowed_disk>
+    </backups>
 </clickhouse>

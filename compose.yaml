@@ -16,6 +16,7 @@ services:
         hard: 262144
     volumes:
       - ./data:/var/lib/clickhouse
+      - ./backups:/backups
       - ./logs:/var/log/clickhouse-server
       - ./clickhouse/config.xml:/etc/clickhouse-server/config.d/listen.xml:ro
     networks:
