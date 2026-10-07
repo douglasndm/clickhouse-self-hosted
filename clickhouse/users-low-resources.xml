@@ -1,0 +1,21 @@
+<!-- Limites por query (perfil "default", usado pelo usuário do .env) -->
+<clickhouse>
+    <profiles>
+        <default>
+            <max_threads>2</max_threads>
+            <max_insert_threads>1</max_insert_threads>
+            <max_final_threads>2</max_final_threads>
+            <max_download_threads>2</max_download_threads>
+
+            <!-- 2 GB por query; acima disso GROUP BY / ORDER BY vão para disco -->
+            <max_memory_usage>2000000000</max_memory_usage>
+            <max_bytes_before_external_group_by>1000000000</max_bytes_before_external_group_by>
+            <max_bytes_before_external_sort>1000000000</max_bytes_before_external_sort>
+            <max_bytes_in_join>500000000</max_bytes_in_join>
+            <join_algorithm>auto</join_algorithm>
+
+            <!-- Menos buffer em inserts grandes -->
+            <max_insert_block_size>262144</max_insert_block_size>
+        </default>
+    </profiles>
+</clickhouse>

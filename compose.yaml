@@ -3,6 +3,11 @@ services:
     image: clickhouse/clickhouse-server:25.8
     container_name: clickhouse
     restart: unless-stopped
+    # ~30% da VPS (16 GB / 4 vCPU), que é compartilhada com outros projetos
+    cpus: 1.2
+    mem_limit: 5g
+    memswap_limit: 5g
+    cpu_shares: 512 # prioridade menor que os outros containers (padrão 1024) quando houver disputa
     environment:
       CLICKHOUSE_USER: ${CLICKHOUSE_USER}
       CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
@@ -19,6 +24,8 @@ services:
       - ./backups:/backups
       - ./logs:/var/log/clickhouse-server
       - ./clickhouse/config.xml:/etc/clickhouse-server/config.d/listen.xml:ro
+      - ./clickhouse/low-resources.xml:/etc/clickhouse-server/config.d/low-resources.xml:ro
+      - ./clickhouse/users-low-resources.xml:/etc/clickhouse-server/users.d/low-resources.xml:ro
     networks:
       - clickhouse-network
 

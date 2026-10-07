@@ -1,0 +1,94 @@
+<!--
+  Perfil de baixo consumo: ClickHouse limitado a ~30% de uma VPS de 16 GB / 4 vCPU.
+  O container já é limitado no compose.yaml (1.2 CPU / 5 GB); aqui o servidor
+  é ajustado para respeitar esse orçamento sem ser morto por OOM.
+-->
+<clickhouse>
+    <!-- Logs do servidor: menos verbosos (o padrão da imagem é "trace") -->
+    <logger>
+        <level>warning</level>
+        <size>100M</size>
+        <count>3</count>
+    </logger>
+
+    <!-- Memória total do servidor (abaixo do limite de 5 GB do container) -->
+    <max_server_memory_usage>4000000000</max_server_memory_usage>
+    <max_server_memory_usage_to_ram_ratio>0.8</max_server_memory_usage_to_ram_ratio>
+
+    <!-- Caches (padrões somam vários GB) -->
+    <mark_cache_size>268435456</mark_cache_size>                 <!-- 256 MB (padrão 5 GB) -->
+    <index_mark_cache_size>67108864</index_mark_cache_size>      <!-- 64 MB -->
+    <uncompressed_cache_size>134217728</uncompressed_cache_size> <!-- 128 MB -->
+    <index_uncompressed_cache_size>67108864</index_uncompressed_cache_size>
+    <primary_index_cache_size>67108864</primary_index_cache_size>
+    <query_condition_cache_size>33554432</query_condition_cache_size>
+    <mmap_cache_size>256</mmap_cache_size>
+    <query_cache>
+        <max_size_in_bytes>67108864</max_size_in_bytes>
+        <max_entries>256</max_entries>
+    </query_cache>
+
+    <!-- CPU: limita threads simultâneas de queries e de tarefas em background -->
+    <concurrent_threads_soft_limit_num>2</concurrent_threads_soft_limit_num>
+    <max_concurrent_queries>20</max_concurrent_queries>
+    <max_thread_pool_size>500</max_thread_pool_size>
+
+    <background_pool_size>2</background_pool_size>
+    <background_merges_mutations_concurrency_ratio>2</background_merges_mutations_concurrency_ratio>
+    <background_schedule_pool_size>8</background_schedule_pool_size>
+    <background_message_broker_schedule_pool_size>1</background_message_broker_schedule_pool_size>
+    <background_distributed_schedule_pool_size>1</background_distributed_schedule_pool_size>
+    <background_buffer_flush_schedule_pool_size>1</background_buffer_flush_schedule_pool_size>
+    <background_move_pool_size>1</background_move_pool_size>
+    <background_fetches_pool_size>1</background_fetches_pool_size>
+    <background_common_pool_size>2</background_common_pool_size>
+    <tables_loader_foreground_pool_size>2</tables_loader_foreground_pool_size>
+    <tables_loader_background_pool_size>1</tables_loader_background_pool_size>
+
+    <!--
+      Com background_pool_size=2 e ratio=2 há 4 slots de merge; estes limites
+      precisam ser menores que isso, senão as tabelas MergeTree não carregam.
+    -->
+    <merge_tree>
+        <number_of_free_entries_in_pool_to_lower_max_size_of_merge>2</number_of_free_entries_in_pool_to_lower_max_size_of_merge>
+        <number_of_free_entries_in_pool_to_execute_mutation>2</number_of_free_entries_in_pool_to_execute_mutation>
+        <number_of_free_entries_in_pool_to_execute_optimize_entire_partition>2</number_of_free_entries_in_pool_to_execute_optimize_entire_partition>
+    </merge_tree>
+
+    <!-- Métricas assíncronas com menos frequência (padrão: 1 s) -->
+    <asynchronous_metrics_update_period_s>60</asynchronous_metrics_update_period_s>
+
+    <!--
+      Tabelas de log internas: são a principal causa de CPU/disco alto com o
+      servidor ocioso (inserts + merges contínuos). Desligamos as pesadas e
+      mantemos query_log e part_log com retenção curta.
+    -->
+    <metric_log remove="1"/>
+    <asynchronous_metric_log remove="1"/>
+    <trace_log remove="1"/>
+    <text_log remove="1"/>
+    <query_thread_log remove="1"/>
+    <query_views_log remove="1"/>
+    <query_metric_log remove="1"/>
+    <latency_log remove="1"/>
+    <processors_profile_log remove="1"/>
+    <opentelemetry_span_log remove="1"/>
+    <asynchronous_insert_log remove="1"/>
+    <backup_log remove="1"/>
+    <s3queue_log remove="1"/>
+    <blob_storage_log remove="1"/>
+    <session_log remove="1"/>
+
+    <query_log>
+        <database>system</database>
+        <table>query_log</table>
+        <engine>ENGINE = MergeTree PARTITION BY event_date ORDER BY event_time TTL event_date + INTERVAL 7 DAY DELETE</engine>
+        <flush_interval_milliseconds>30000</flush_interval_milliseconds>
+    </query_log>
+    <part_log>
+        <database>system</database>
+        <table>part_log</table>
+        <engine>ENGINE = MergeTree PARTITION BY event_date ORDER BY event_time TTL event_date + INTERVAL 7 DAY DELETE</engine>
+        <flush_interval_milliseconds>30000</flush_interval_milliseconds>
+    </part_log>
+</clickhouse>
