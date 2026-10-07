@@ -1,0 +1,14 @@
+<clickhouse>
+    <!-- Background merges and mutations pools (reduced for VPS multi-tenant environment) -->
+    <background_pool_size>2</background_pool_size>
+    <background_merges_mutations_concurrency_ratio>1</background_merges_mutations_concurrency_ratio>
+
+    <!-- Internal schedule pools -->
+    <background_schedule_pool_size>16</background_schedule_pool_size>
+    <background_fetches_pool_size>1</background_fetches_pool_size>
+    <background_move_pool_size>1</background_move_pool_size>
+    <background_common_pool_size>1</background_common_pool_size>
+
+    <!-- Server memory usage limit (keeps ClickHouse bounded within container RAM) -->
+    <max_server_memory_usage_to_ram_ratio>0.7</max_server_memory_usage_to_ram_ratio>
+</clickhouse>
